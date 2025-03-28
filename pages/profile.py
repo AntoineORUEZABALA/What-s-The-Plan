@@ -1,8 +1,25 @@
 import streamlit as st
 from db.chroma_config import get_chroma_client
+from sklearn.cluster import KMeans
+import numpy as np
+
+def calculate_user_cluster(preferences_vector, users_collection):
+    # Récupérer tous les utilisateurs pour le clustering
+    all_users = users_collection.get(include=['embeddings'])
+    if not all_users['embeddings']:
+        return 0
+    
+    embeddings = np.array(all_users['embeddings'])
+    n_clusters = min(3, len(embeddings))
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+    clusters = kmeans.fit_predict(embeddings)
+    
+    # Prédire le cluster pour le nouveau vecteur
+    new_cluster = kmeans.predict([preferences_vector])[0]
+    return int(new_cluster)
 
 def show_profile_page():
-    st.title("My Profile")
+    st.title("Mon Profil")
     
     client = get_chroma_client()
     users_collection = client.get_collection("users")
@@ -109,12 +126,16 @@ def show_profile_page():
             # Créer le vecteur d'embedding des préférences
             preference_vector = [int(v) for v in preferences.values()]
             
-            # Mettre à jour le profil
+            # Calculer le cluster de l'utilisateur
+            user_cluster = calculate_user_cluster(preference_vector, users_collection)
+            
+            # Mettre à jour le profil avec le cluster
             users_collection.upsert(
                 ids=[user_id],
                 embeddings=[preference_vector],
                 metadatas=[{
                     'name': name,
+                    'cluster': user_cluster,
                     **{f"pref_{k}": v for k, v in preferences.items()}
                 }]
             )

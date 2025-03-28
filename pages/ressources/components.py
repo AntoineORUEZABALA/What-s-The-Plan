@@ -73,7 +73,7 @@ def Navbar():
         st.markdown("## Navigation")
         st.page_link('app.py', label='Accueil', icon='🏠')
         st.page_link('map.py', label='Carte',icon='🗺️')
-        st.page_link('app.py', label='A la Une',icon='🔥')
+        st.page_link('trending.py', label='A la Une',icon='🔥')
         st.page_link('profile.py', label='Profil',icon='👤')
         st.markdown("---")
 
